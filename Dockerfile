@@ -1,7 +1,18 @@
-FROM node:22.3.0-alpine3.19
+FROM node:22.3.0-alpine3.19 as build
+MAINTAINER aedemirsen
 WORKDIR /app
-COPY package.json .
+COPY package.json ./
+COPY package-lock.json ./
 RUN npm install
-COPY . .
-EXPOSE 3000
-CMD ["npm","start"]
+COPY . ./
+
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
