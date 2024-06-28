@@ -1,18 +1,22 @@
-FROM node:22.3.0-alpine3.19 as build
-MAINTAINER aedemirsen
-WORKDIR /app
-COPY package.json ./
-COPY package-lock.json ./
-RUN npm install
-COPY . ./
+FROM node:22.3.0-alpine3.19
 
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the package.json and package-lock.json files to the container ( meta data )
+COPY package*.json ./
+
+# get dependencies with npm install
+RUN npm install
+
+# Copy the application code to the container
+COPY . .
+
+# Build the React.js application
 RUN npm run build
 
-FROM nginx:stable-alpine
+# Expose the container port to run
+EXPOSE 3000
 
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Start the application
+CMD ["npm", "start"]
