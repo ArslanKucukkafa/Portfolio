@@ -1,22 +1,15 @@
-FROM node:22.3.0-alpine3.19
-
-# Set the working directory in the container
+FROM node:22.3.0-alpine3.19 as build
 WORKDIR /app
-
-# Copy the package.json and package-lock.json files to the container ( meta data )
 COPY package*.json ./
-
-# get dependencies with npm install
 RUN npm install
-
-# Copy the application code to the container
 COPY . .
-
-# Build the React.js application
 RUN npm run build
 
-# Expose the container port to run
-EXPOSE 3000
+# Stage 2: Setup the Nginx Server to serve the React Application
+FROM nginx:1.25.0-alpine as production
+COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
 
-# Start the application
-CMD ["npm", "start"]
+
